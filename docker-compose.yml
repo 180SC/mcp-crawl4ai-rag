@@ -1,0 +1,11 @@
+services:
+  crawl4ai-rag-app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8051:8051"
+    # If you need to specify a container name similar to how docker run might auto-assign or if you want a predictable one:
+    # container_name: my_crawl4ai_rag_container
+
