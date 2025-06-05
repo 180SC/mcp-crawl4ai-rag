@@ -69,8 +69,11 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     )
     
     # Initialize the crawler
+    print(f"[DEBUG] Creating AsyncWebCrawler instance...")
     crawler = AsyncWebCrawler(config=browser_config)
+    print(f"[DEBUG] About to call crawler.__aenter__()...")
     await crawler.__aenter__()
+    print(f"[DEBUG] AsyncWebCrawler.__aenter__() completed successfully")
     
     # Initialize Supabase client
     supabase_client = get_supabase_client()
@@ -92,7 +95,9 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
         )
     finally:
         # Clean up the crawler
+        print(f"[DEBUG] About to call crawler.__aexit__() for cleanup...")
         await crawler.__aexit__(None, None, None)
+        print(f"[DEBUG] AsyncWebCrawler.__aexit__() completed successfully")
 
 # Initialize FastMCP server
 mcp = FastMCP(
