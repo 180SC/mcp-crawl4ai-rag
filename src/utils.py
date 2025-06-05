@@ -11,7 +11,16 @@ import openai
 import re
 import time
 
-# Load OpenAI API key for embeddings
+# Initialize OpenAI client for embeddings (original functionality)
+openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Initialize OpenRouter client for MODEL_CHOICE operations (contextual embeddings, summaries)
+openrouter_client = openai.OpenAI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url=os.getenv("OPENROUTER_BASE_URL")
+)
+
+# Maintain backward compatibility with the global api_key setting
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_supabase_client() -> Client:
@@ -47,7 +56,7 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     
     for retry in range(max_retries):
         try:
-            response = openai.embeddings.create(
+            response = openai_client.embeddings.create(
                 model="text-embedding-3-small", # Hardcoding embedding model for now, will change this later to be more dynamic
                 input=texts
             )
@@ -67,7 +76,7 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                 
                 for i, text in enumerate(texts):
                     try:
-                        individual_response = openai.embeddings.create(
+                        individual_response = openai_client.embeddings.create(
                             model="text-embedding-3-small",
                             input=[text]
                         )
@@ -125,8 +134,8 @@ Here is the chunk we want to situate within the whole document
 </chunk> 
 Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
 
-        # Call the OpenAI API to generate contextual information
-        response = openai.chat.completions.create(
+        # Call the OpenRouter API to generate contextual information
+        response = openrouter_client.chat.completions.create(
             model=model_choice,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
@@ -468,7 +477,7 @@ Based on the code example and its surrounding context, provide a concise summary
 """
     
     try:
-        response = openai.chat.completions.create(
+        response = openrouter_client.chat.completions.create(
             model=model_choice,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
@@ -662,8 +671,8 @@ The above content is from the documentation for '{source_id}'. Please provide a 
 """
     
     try:
-        # Call the OpenAI API to generate the summary
-        response = openai.chat.completions.create(
+        # Call the OpenRouter API to generate the summary
+        response = openrouter_client.chat.completions.create(
             model=model_choice,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
