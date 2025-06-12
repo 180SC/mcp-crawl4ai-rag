@@ -66,6 +66,87 @@ def smart_crawl_url_cli(
     # Run the async function
     asyncio.run(_run_smart_crawl())
 
+@app.command("crawl-single-page")
+def crawl_single_page_cli(
+    url: str = typer.Argument(..., help="URL of the web page to crawl")
+) -> None:
+    """
+    Crawl a single web page and store its content in Supabase.
+    
+    This command is ideal for quickly retrieving content from a specific URL without following links.
+    The content is stored in Supabase for later retrieval and querying.
+    """
+    async def _run_crawl_single_page():
+        # Import the function from crawl4ai_mcp
+        from crawl4ai_mcp import crawl_single_page
+        
+        try:
+            # Create a mock context since the CLI version doesn't have MCP context
+            # We'll need to initialize the crawler and supabase client directly
+            from crawl4ai import AsyncWebCrawler, BrowserConfig
+            from utils import get_supabase_client
+            from dataclasses import dataclass
+            
+            @dataclass
+            class MockContext:
+                @dataclass
+                class RequestContext:
+                    @dataclass
+                    class LifespanContext:
+                        crawler: AsyncWebCrawler
+                        supabase_client: any
+                    lifespan_context: LifespanContext
+                request_context: RequestContext
+            
+            # Create browser configuration
+            browser_config = BrowserConfig(
+                headless=True,
+                verbose=False
+            )
+            
+            # Initialize the crawler
+            crawler = AsyncWebCrawler(config=browser_config)
+            await crawler.__aenter__()
+            
+            # Initialize Supabase client
+            supabase_client = get_supabase_client()
+            
+            try:
+                # Create mock context
+                mock_ctx = MockContext(
+                    request_context=MockContext.RequestContext(
+                        lifespan_context=MockContext.RequestContext.LifespanContext(
+                            crawler=crawler,
+                            supabase_client=supabase_client
+                        )
+                    )
+                )
+                
+                result = await crawl_single_page(mock_ctx, url)
+                
+                # Parse and pretty print the result
+                try:
+                    result_dict = json.loads(result)
+                    print(json.dumps(result_dict, indent=2))
+                except json.JSONDecodeError:
+                    print(result)
+                    
+            finally:
+                # Clean up the crawler
+                await crawler.__aexit__(None, None, None)
+                
+        except Exception as e:
+            error_result = {
+                "success": False,
+                "url": url,
+                "error": str(e)
+            }
+            print(json.dumps(error_result, indent=2))
+            raise typer.Exit(1)
+    
+    # Run the async function
+    asyncio.run(_run_crawl_single_page())
+
 @app.command("version")
 def version():
     """Show version information."""
