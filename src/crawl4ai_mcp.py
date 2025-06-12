@@ -91,6 +91,12 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
             reranking_model = None
     """
 
+    #Check for GPU:
+    import torch
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    print(f"GPU/CPU Support for reranking: {device}")
+
     # Fix for loading issues
     if os.getenv("USE_RERANKING", "false") == "true":
         try:
@@ -100,7 +106,7 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 reranking_model = await loop.run_in_executor(
                     executor, 
-                    lambda: CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+                    lambda: CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", device=device)
                 )
             print(f"[DEBUG] Reranking model loaded successfully")
         except Exception as e:
