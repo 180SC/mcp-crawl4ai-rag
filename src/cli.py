@@ -37,7 +37,8 @@ def smart_crawl_url_cli(
     """
     async def _run_smart_crawl():
         # Import the function from crawl4ai_mcp
-        from crawl4ai_mcp import smart_crawl_url
+        from crawling import smart_crawl_url
+        
         
         try:
             result = await smart_crawl_url(
@@ -78,7 +79,7 @@ def crawl_single_page_cli(
     """
     async def _run_crawl_single_page():
         # Import the function from crawl4ai_mcp
-        from crawl4ai_mcp import crawl_single_page
+        from crawling import crawl_single_page
         
         try:
             # Create a mock context since the CLI version doesn't have MCP context
