@@ -103,12 +103,19 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
             print(f"[DEBUG] Loading reranking model asynchronously...")
             # Load the model in a thread pool to avoid blocking the async loop
             loop = asyncio.get_event_loop()
+
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 reranking_model = await loop.run_in_executor(
                     executor, 
-                    lambda: CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", device=device)
+                    lambda: CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")  # Remove device parameter
                 )
-            print(f"[DEBUG] Reranking model loaded successfully")
+                # Move to device after loading
+                if hasattr(reranking_model.model, 'to_empty'):
+                    reranking_model.model = reranking_model.model.to_empty(device=device)
+                else:
+                    reranking_model.model = reranking_model.model.to(device)
+
+                print(f"[DEBUG] Reranking model loaded successfully to {device}")
         except Exception as e:
             print(f"[ERROR] Failed to load reranking model: {e}")
             reranking_model = None
